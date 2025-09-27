@@ -1,0 +1,21 @@
+Warsaw (BR1) → tem 192.168.176.0/23
+
+/23 → 23 bits para a rede, sobra 9 bits de hosts.
+
+Numero de ips =2 elevado ao numero de bits
+
+/23 =32 - 23= 9 bits de host = 2 elevado a 9 = 512 ips, 510 validos
+
+Warsaw: 192.168.176.0 até 192.168.177.255.
+
+Subnetting:
+
+Users (~200 hosts) → precisa de um /24 (254 válidos).
+
+Staff (30 hosts) → precisa de um /27 (30 válidos).
+
+Accounting (20 hosts) → também /27.
+
+HR (10 hosts) → um /28 (14 válidos).
+
+Links ponto-a-ponto → sempre /30 (2 válidos).
