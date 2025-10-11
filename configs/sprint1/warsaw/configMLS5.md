@@ -1,192 +1,151 @@
-# Configuração MLS5 (Multilayer Switch 5)
+enable
+configure terminal
 
-## Configuração VTP
+hostname MLS5
 
-```
-en
-conf t
-
+! ===== VTP =====
 vtp domain RECOMP2526M1B01
 vtp password 6252pmocer
 vtp mode server
 vtp version 2
-```
 
-## Configuração de Port-Channel (Modo Switch)
+! ===== CRIAR VLANs (IMPORTANTE!) =====
+vlan 10
+name STAFF
+exit
 
-### Port-Channel 2 (Fa0/3-4)
-```
-interface range Fa0/3-4
- channel-group 2 mode active
- exit
+vlan 20
+name ACCOUNTING
+exit
 
-interface port-channel 2
- switchport trunk encapsulation dot1q
- switchport mode trunk
- switchport trunk native vlan 50
- switchport trunk allowed vlan 1-4094
- switchport trunk allowed vlan remove 99
- exit
-```
+vlan 30
+name HR
+exit
 
-### Port-Channel 3 (Fa0/1-2)
-```
-interface range Fa0/1-2
- channel-group 3 mode active
- exit
+vlan 40
+name USERS
+exit
 
-interface port-channel 3
- switchport trunk encapsulation dot1q
- switchport mode trunk
- switchport trunk native vlan 50
- switchport trunk allowed vlan 1-4094
- switchport trunk allowed vlan remove 99
- exit
+vlan 50
+name NATIVE
+exit
 
-end
-```
+vlan 99
+name BLACKHOLE
+exit
 
-## Configuração Spanning Tree
-
-```
-en
-conf t
-
+! ===== Spanning Tree =====
 spanning-tree mode rapid-pvst
-
 spanning-tree vlan 30 root primary
 spanning-tree vlan 40 root primary
-
 spanning-tree vlan 10 root secondary
 spanning-tree vlan 20 root secondary
 
-end
-```
-
-## Configuração IP Routing e Interfaces VLAN
-
-```
-en
-conf t
-
+! ===== IP Routing =====
 ip routing
-```
 
-### Interface VLAN 10 (STAFF)
-```
+
+! ===== Port-Channel 2 para MLS3 (Layer 3) =====
+interface range fa0/3-4
+shutdown
+no switchport
+channel-group 2 mode active
+no shutdown
+interface port-channel 2
+ip address 192.168.177.86 255.255.255.252
+description Link to MLS3
+no shutdown
+exit
+
+
+
+! ===== Port-Channel 3 para MLS4 (Layer 2 Trunk) =====
+interface range fa0/1-2
+shutdown
+channel-group 3 mode active
+no shutdown
+interface port-channel 3
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 50
+switchport trunk allowed vlan 10,20,30,40,50
+switchport trunk allowed vlan remove 99
+no shutdown
+exit
+
+! ===== Trunks restantes L2 =====
+interface range fa0/6-8
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk native vlan 50
+switchport trunk allowed vlan 10,20,30,40,50
+switchport trunk allowed vlan remove 99
+no shutdown
+exit
+
+! ===== SVIs com HSRP =====
+! VLAN 10 (STAFF) - Standby
 interface vlan 10
 ip address 192.168.177.3 255.255.255.224
 standby 10 ip 192.168.177.1
-standby 10 priority 90
+standby 10 priority 100
 no shutdown
 exit
-```
 
-### Interface VLAN 20 (ACCOUNTING)
-```
+! VLAN 20 (ACCOUNTING) - Standby
 interface vlan 20
 ip address 192.168.177.35 255.255.255.224
 standby 20 ip 192.168.177.33
-standby 20 priority 90
+standby 20 priority 100
 no shutdown
 exit
-```
 
-### Interface VLAN 30 (HR)
-```
+! VLAN 30 (HR) - Active
 interface vlan 30
 ip address 192.168.177.67 255.255.255.240
 standby 30 ip 192.168.177.65
-standby 30 priority 110
+standby 30 priority 150
 standby 30 preempt
 no shutdown
 exit
-```
 
-### Interface VLAN 40 (USERS)
-```
+! VLAN 40 (USERS) - Active
 interface vlan 40
 ip address 192.168.176.3 255.255.255.0
 standby 40 ip 192.168.176.1
-standby 40 priority 110
+standby 40 priority 150
 standby 40 preempt
 no shutdown
 exit
 
-end
-```
-
-## Reconfiguração Port-Channel 2 para Layer 3
-
-```
-en
-conf t
-
-no interface port-channel 2
-
-interface range fa0/3-4
-no switchport
-no channel-group 2
-exit
-
-interface range fa0/3-4
-channel-group 2 mode active
-exit
-
-interface port-channel 2
-no switchport
-ip address 192.168.177.86 255.255.255.252
-no shutdown
-exit
-
-end
-```
-
-## Configuração DHCP
-
-### Endereços Excluídos
-```
-en
-conf t
-
+! ===== DHCP Excluded Addresses =====
 ip dhcp excluded-address 192.168.177.1 192.168.177.3
 ip dhcp excluded-address 192.168.177.33 192.168.177.35
 ip dhcp excluded-address 192.168.177.65 192.168.177.67
 ip dhcp excluded-address 192.168.176.1 192.168.176.3
-```
 
-### Pool VLAN 10 (STAFF)
-```
+! ===== DHCP Pools =====
 ip dhcp pool VLAN10
 network 192.168.177.0 255.255.255.224
 default-router 192.168.177.1
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
 exit
-```
 
-### Pool VLAN 20 (ACCOUNTING)
-```
 ip dhcp pool VLAN20
 network 192.168.177.32 255.255.255.224
 default-router 192.168.177.33
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
 exit
-```
 
-### Pool VLAN 30 (HR)
-```
 ip dhcp pool VLAN30
 network 192.168.177.64 255.255.255.240
 default-router 192.168.177.65
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
 exit
-```
 
-### Pool VLAN 40 (USERS)
-```
 ip dhcp pool VLAN40
 network 192.168.176.0 255.255.255.0
 default-router 192.168.176.1
@@ -194,49 +153,9 @@ dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
 exit
 
+! ===== Rota Padrão para Internet via MLS3 =====
+ip route 0.0.0.0 0.0.0.0 192.168.177.85
+
 end
-```
 
----
-
-## Resumo das Configurações
-
-### Spanning Tree
-
-| VLAN | Função | Prioridade |
-|------|--------|------------|
-| 30 | Root Primary | - |
-| 40 | Root Primary | - |
-| 10 | Root Secondary | - |
-| 20 | Root Secondary | - |
-
-### HSRP (Hot Standby Router Protocol)
-
-| VLAN | IP Real | IP Virtual | Prioridade | Preempt |
-|------|---------|------------|------------|---------|
-| 10 | 192.168.177.3 | 192.168.177.1 | 90 | Não |
-| 20 | 192.168.177.35 | 192.168.177.33 | 90 | Não |
-| 30 | 192.168.177.67 | 192.168.177.65 | 110 | Sim |
-| 40 | 192.168.176.3 | 192.168.176.1 | 110 | Sim |
-
-### Port-Channel (Layer 3)
-
-| Port-Channel | Interfaces | Endereço IP |
-|--------------|------------|-------------|
-| Po2 | Fa0/3-4 | 192.168.177.86/30 |
-
-### Pools DHCP
-
-| Pool | Network | Gateway | DNS |
-|------|---------|---------|-----|
-| VLAN10 | 192.168.177.0/27 | 192.168.177.1 | 8.8.8.8 |
-| VLAN20 | 192.168.177.32/27 | 192.168.177.33 | 8.8.8.8 |
-| VLAN30 | 192.168.177.64/28 | 192.168.177.65 | 8.8.8.8 |
-| VLAN40 | 192.168.176.0/24 | 192.168.176.1 | 8.8.8.8 |
-
-### VTP
-
-- **Domínio:** RECOMP2526M1B01
-- **Password:** 6252pmocer
-- **Modo:** Server
-- **Versão:** 2
+write memory
