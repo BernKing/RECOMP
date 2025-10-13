@@ -1,0 +1,217 @@
+MLS1#show run
+Building configuration...
+
+Current configuration : 3988 bytes
+!
+version 12.2(37)SE1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname MLS1
+!
+!
+!
+ip dhcp excluded-address 10.23.54.1
+ip dhcp excluded-address 10.23.54.254
+ip dhcp excluded-address 10.23.55.1
+ip dhcp excluded-address 10.23.55.126
+ip dhcp excluded-address 10.23.52.1
+ip dhcp excluded-address 10.23.53.254
+ip dhcp excluded-address 10.23.55.129
+ip dhcp excluded-address 10.23.55.190
+!
+ip dhcp pool ACCOUNTING
+ network 10.23.54.0 255.255.255.0
+ default-router 10.23.54.254
+ dns-server 8.8.8.8
+ domain-name RECOMP2526M1B01.recomp.com
+ip dhcp pool HR
+ network 10.23.55.0 255.255.255.128
+ default-router 10.23.55.126
+ dns-server 8.8.8.8
+ domain-name RECOMP2526M1B01.recomp.com
+ip dhcp pool USERS
+ network 10.23.52.0 255.255.254.0
+ default-router 10.23.53.254
+ dns-server 8.8.8.8
+ domain-name RECOMP2526M1B01.recomp.com
+ip dhcp pool STAFF
+ network 10.23.55.128 255.255.255.192
+ default-router 10.23.55.190
+ dns-server 8.8.8.8
+ domain-name RECOMP2526M1B01.recomp.com
+!
+!
+ip routing
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no spanning-tree vlan 50
+spanning-tree mode rapid-pvst
+spanning-tree vlan 10,20 priority 24576
+spanning-tree vlan 30,40 priority 28672
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/1
+ description TRUNK Link-Agregation to MLS2
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol pagp
+ channel-group 1 mode desirable
+!
+interface FastEthernet0/2
+ description TRUNK Link-Agregation to MLS2
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ channel-protocol pagp
+ channel-group 1 mode desirable
+!
+interface FastEthernet0/3
+ description TRUNK para SW1
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/4
+ description TRUNK para SW2
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+!
+interface FastEthernet0/5
+!
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ no switchport
+ ip address 10.23.55.194 255.255.255.252
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ mac-address 0005.5e45.6d01
+ ip address 10.23.55.129 255.255.255.192
+ standby 10 ip 10.23.55.190
+ standby 10 priority 150
+ standby 10 preempt
+!
+interface Vlan20
+ mac-address 0005.5e45.6d02
+ ip address 10.23.54.1 255.255.255.0
+ standby 20 ip 10.23.54.254
+ standby 20 priority 150
+ standby 20 preempt
+!
+interface Vlan30
+ mac-address 0005.5e45.6d03
+ ip address 10.23.55.1 255.255.255.128
+ standby 30 ip 10.23.55.126
+ standby 30 priority 150
+ standby 30 preempt
+!
+interface Vlan40
+ mac-address 0005.5e45.6d04
+ ip address 10.23.52.1 255.255.254.0
+ standby 40 ip 10.23.53.254
+ standby 40 priority 150
+ standby 40 preempt
+!
+interface Vlan50
+ mac-address 0005.5e45.6d05
+ ip address 10.23.55.205 255.255.255.252
+!
+ip classless
+ip route 0.0.0.0 0.0.0.0 10.23.55.193 
+ip route 0.0.0.0 0.0.0.0 10.23.55.206 10
+!
+ip flow-export version 9
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+!
+end
