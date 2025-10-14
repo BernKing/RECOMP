@@ -116,7 +116,12 @@ interface range FastEthernet0/1-2
  channel-group 1 mode desirable
 
 
-
+interface Port-channel1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 50
+ switchport trunk allowed vlan 1-98,100-1005
+ no shutdown
 
 MLS2#show etherchannel summary 
 Flags:  D - down        P - in port-channel
@@ -219,7 +224,7 @@ SW2(config-if)#switchport trunk allowed vlan 1-98,100-1005
 RECOMP2526TTTGG (TTT=class, GG=group number), the password 
 6252pmocer and all the L2 switches as VTP Clients. 
 
-### VTP Servers/clients  o MLS2 ficou como cliente ###
+### VTP Servers/clients###
 
 ```
 MLS1(config)vtp mode server
@@ -227,7 +232,7 @@ MLS1(config)vtp domain RECOMP2526M1B01
 MLS1(config)vtp password 6252pmocer
 MLS1(config)vtp version 2
 
-MLS2(config)vtp mode client
+MLS2(config)vtp mode server
 MLS2(config)vtp domain RECOMP2526M1B01
 MLS2(config)vtp password 6252pmocer
 MLS2(config)vtp version 2
@@ -365,39 +370,74 @@ the root bridge for the same VLAN.
 
 *** (SVI) MLS1 e MLS2 ***
 
+*** MLS1 ***
 ```
 interface vlan 10
-ip address 10.23.55.129 255.255.255.192
-standby 10 ip 10.23.55.190
-standby 10 priority 150
-standby 10 preempt
+ ip address 10.23.55.129 255.255.255.192
+ standby 10 ip 10.23.55.190
+ standby 10 priority 150
+ standby 10 preempt
 interface vlan 20
-ip address 10.23.54.1 255.255.255.0
-standby 20 ip 10.23.54.254
-standby 20 priority 150
-standby 20 preempt
+ ip address 10.23.54.1 255.255.255.0
+ standby 20 ip 10.23.54.254
+ standby 20 priority 150
+ standby 20 preempt
 interface vlan 30
-ip address 10.23.55.1 255.255.255.128
-standby 30 ip 10.23.55.126
-standby 30 priority 150
-standby 30 preempt
+ ip address 10.23.55.2 255.255.255.128
+ standby 30 ip 10.23.55.126
+ standby 30 priority 100
+ standby 30 preempt
 interface vlan 40
-ip address 10.23.52.1 255.255.254.0
-standby 40 ip 10.23.53.254
-standby 40 priority 150
-standby 40 preempt
+ ip address 10.23.52.2 255.255.254.0
+ standby 40 ip 10.23.53.254
+ standby 40 priority 100
+ standby 40 preempt
 
+ ```
+*** MLS2 ***
+ ```
+interface vlan 10
+ ip address 10.23.55.130 255.255.255.192
+ standby 10 ip 10.23.55.190
+ standby 10 priority 100
+ standby 10 preempt
+interface vlan 20
+ ip address 10.23.54.2 255.255.255.0
+ standby 20 ip 10.23.54.254
+ standby 20 priority 100
+ standby 20 preempt
+interface vlan 30
+ ip address 10.23.55.1 255.255.255.128
+ standby 30 ip 10.23.55.126
+ standby 30 priority 150
+ standby 30 preempt
+interface vlan 40
+ ip address 10.23.52.1 255.255.254.0
+ standby 40 ip 10.23.53.254
+ standby 40 priority 150
+ standby 40 preempt
 
+ ```
+
+ ```
 MLS1#show standby brief
                      P indicates configured to preempt.
                      |
 Interface   Grp  Pri P State    Active          Standby         Virtual IP
-Vl10        10   150 P Active   local           10.23.55.129    10.23.55.190   
-Vl20        20   150 P Active   local           10.23.54.1      10.23.54.254   
-Vl30        30   150 P Active   local           10.23.55.1      10.23.55.126   
-Vl40        40   150 P Active   local           10.23.52.1      10.23.53.254   
+Vl10        10   150 P Active   local           10.23.55.130    10.23.55.190   
+Vl20        20   150 P Active   local           10.23.54.2      10.23.54.254   
+Vl30        30   100 P Standby  10.23.55.1      local           10.23.55.126   
+Vl40        40   100 P Standby  10.23.52.1      local           10.23.53.254 
 
+MLS2#show standby brief
 
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State    Active          Standby         Virtual IP
+Vl10        10   100 P Standby  10.23.55.129    local           10.23.55.190   
+Vl20        20   100 P Standby  10.23.54.1      local           10.23.54.254   
+Vl30        30   150 P Active   local           10.23.55.2      10.23.55.126   
+Vl40        40   150 P Active   local           10.23.52.2      10.23.53.254   
 
 ```
 - Configure routed ports on both MLSs. 
@@ -478,29 +518,33 @@ network 10.23.55.128 255.255.255.192
 default-router 10.23.55.190
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
-ip dhcp excluded-address 10.23.55.129 10.23.55.129
+ip dhcp excluded-address 10.23.55.129 10.23.55.130
 ip dhcp excluded-address 10.23.55.190 10.23.55.190
 ip dhcp pool ACCOUNTING
 network 10.23.54.0 255.255.255.0
 default-router 10.23.54.254
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
-ip dhcp excluded-address 10.23.54.1 10.23.54.1
+ip dhcp excluded-address 10.23.54.1 10.23.54.2
 ip dhcp excluded-address 10.23.54.254 10.23.54.254
 ip dhcp pool HR
 network 10.23.55.0 255.255.255.128
 default-router 10.23.55.126
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
-ip dhcp excluded-address 10.23.55.1 10.23.55.1
+ip dhcp excluded-address 10.23.55.1 10.23.55.2
 ip dhcp excluded-address 10.23.55.126 10.23.55.126
 ip dhcp pool USERS
 network 10.23.52.0 255.255.254.0
 default-router 10.23.53.254
 dns-server 8.8.8.8
 domain-name RECOMP2526M1B01.recomp.com
-ip dhcp excluded-address 10.23.52.1 10.23.52.1
+ip dhcp excluded-address 10.23.52.1 10.23.52.2
 ip dhcp excluded-address 10.23.53.254 10.23.53.254
+
+
+
+
 
 ```
 - Excluded the already used addresses on the configuration. 
@@ -531,18 +575,6 @@ MLS2(config)#ip route 0.0.0.0 0.0.0.0 10.23.55.197
 *** ROUTER ***
 
 
-*** Configure Static NAT ***
-
-```
-Oporto(config)#ip nat inside source static 10.23.55.193 209.165.200.129
-Oporto(config)#interface GigabitEthernet0/0
-Oporto(config-if)# ip nat inside
-Oporto(config)#interface GigabitEthernet0/1
-Oporto(config-if)# ip nat inside
-Oporto(config-if)#interface GigabitEthernet0/0/0
-Oporto(config-if)#ip nat outside
-
-```
 *** ACL NAT ROUTER ***
 
 ```
@@ -551,6 +583,13 @@ access-list 1 permit 10.23.55.128 0.0.0.63
 access-list 1 permit 10.23.54.0 0.0.0.255
 access-list 1 permit 10.23.55.0 0.0.0.127
 access-list 1 permit 10.23.52.0 0.0.1.255
+
+Oporto(config)#interface GigabitEthernet0/0
+Oporto(config-if)# ip nat inside
+Oporto(config)#interface GigabitEthernet0/1
+Oporto(config-if)# ip nat inside
+Oporto(config-if)#interface GigabitEthernet0/0/0
+Oporto(config-if)#ip nat outside
 
 ```
 
@@ -567,25 +606,6 @@ ip route 10.23.55.0 255.255.255.128 10.23.55.198 5
 ip route 10.23.52.0 255.255.254.0 10.23.55.198 5
 ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0/0
 
-
-```
-
-
-### para fazer a trunk sem encapsolamento com os SW ### APAGAR
-#### MLS1 e MLS2
-
-```
-interface FastEthernet0/3
- switchport
- switchport mode trunk
- switchport trunk native vlan 50
- switchport trunk allowed vlan 1-98,100-1005
-
- interface FastEthernet0/4
- switchport
- switchport mode trunk
- switchport trunk native vlan 50
- switchport trunk allowed vlan 1-98,100-1005
 
 ```
 
