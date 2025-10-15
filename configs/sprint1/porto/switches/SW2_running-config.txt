@@ -1,7 +1,3 @@
-SW2#show run
-Building configuration...
-
-Current configuration : 2007 bytes
 !
 version 15.0
 no service timestamps log datetime msec
@@ -126,3 +122,4 @@ line vty 5 15
 !
 !
 end
+

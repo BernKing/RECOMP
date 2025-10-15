@@ -1,7 +1,3 @@
-Oporto#show run
-Building configuration...
-
-Current configuration : 1649 bytes
 !
 version 15.1
 no service timestamps log datetime msec
@@ -74,15 +70,9 @@ interface Vlan1
 !
 ip nat inside source list 1 interface GigabitEthernet0/0/0 overload
 ip classless
-ip route 10.23.55.128 255.255.255.192 10.23.55.194 
-ip route 10.23.54.0 255.255.255.0 10.23.55.194 
-ip route 10.23.55.0 255.255.255.128 10.23.55.194 
-ip route 10.23.52.0 255.255.254.0 10.23.55.194 
-ip route 10.23.55.128 255.255.255.192 10.23.55.198 5
-ip route 10.23.54.0 255.255.255.0 10.23.55.198 5
-ip route 10.23.55.0 255.255.255.128 10.23.55.198 5
-ip route 10.23.52.0 255.255.254.0 10.23.55.198 5
 ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0/0 
+ip route 10.23.52.0 255.255.252.0 10.23.55.194 
+ip route 10.23.52.0 255.255.252.0 10.23.55.198 5
 !
 ip flow-export version 9
 !
@@ -106,3 +96,4 @@ line vty 0 4
 !
 !
 end
+

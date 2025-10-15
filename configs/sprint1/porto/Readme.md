@@ -67,8 +67,9 @@ interface range FastEthernet0/1-2
  switchport trunk allowed vlan 1-98,100-1005
  switchport trunk encapsulation dot1q
  switchport mode trunk
- channel-protocol pagp
- channel-group 1 mode desirable
+ channel-group 1 mode active
+ channel-protocol lacp
+
 
 interface Port-channel1
  switchport trunk encapsulation dot1q
@@ -77,7 +78,7 @@ interface Port-channel1
  switchport trunk allowed vlan 1-98,100-1005
  no shutdown
 
-MLS1#show etherchannel summary 
+MLS1#show etherchannel summary
 Flags:  D - down        P - in port-channel
         I - stand-alone s - suspended
         H - Hot-standby (LACP only)
@@ -94,11 +95,7 @@ Number of aggregators:           1
 Group  Port-channel  Protocol    Ports
 ------+-------------+-----------+----------------------------------------------
 
-1      Po1(SU)           PAgP   Fa0/1(P) Fa0/2(P) 
-
-
-
-!
+1      Po1(SU)           LACP   Fa0/1(P) Fa0/2(P) 
 
 
 ```
@@ -107,13 +104,13 @@ Group  Port-channel  Protocol    Ports
 
 ```
 interface range FastEthernet0/1-2
- description TRUNK Link-Agregation to MLS1
+ description TRUNK Link-Agregation to MLS2
  switchport trunk native vlan 50
  switchport trunk allowed vlan 1-98,100-1005
  switchport trunk encapsulation dot1q
  switchport mode trunk
- channel-protocol pagp
- channel-group 1 mode desirable
+ channel-group 1 mode active
+ channel-protocol lacp
 
 
 interface Port-channel1
@@ -123,7 +120,7 @@ interface Port-channel1
  switchport trunk allowed vlan 1-98,100-1005
  no shutdown
 
-MLS2#show etherchannel summary 
+MLS2#show ether summary
 Flags:  D - down        P - in port-channel
         I - stand-alone s - suspended
         H - Hot-standby (LACP only)
@@ -140,7 +137,7 @@ Number of aggregators:           1
 Group  Port-channel  Protocol    Ports
 ------+-------------+-----------+----------------------------------------------
 
-1      Po1(SD)           PAgP   Fa0/1(s) Fa0/2(s) 
+1      Po1(SU)           LACP   Fa0/1(P) Fa0/2(P) 
 
 ```
 
@@ -252,7 +249,7 @@ SW2(config)vtp version 2
 10 (STAFF), VLAN 20 (ACCOUNTING), VLAN 30 (HR), VLAN 40 
 (USERS), VLAN 50 (NATIVE), VLAN 99 (BLACKHOLE). 
 
-*** Configurar VLAN MLS1 Não criei no MLS2 ***
+*** Configurar VLAN MLS1***
 
 ```
 MLS1(config)#vlan 10
@@ -596,14 +593,11 @@ Oporto(config-if)#ip nat outside
 *** ROTAS Estáticas do ROUTER ***
 
 ```
-ip route 10.23.55.128 255.255.255.192 10.23.55.194
-ip route 10.23.54.0 255.255.255.0 10.23.55.194
-ip route 10.23.55.0 255.255.255.128 10.23.55.194
-ip route 10.23.52.0 255.255.254.0 10.23.55.194
-ip route 10.23.55.128 255.255.255.192 10.23.55.198 5
-ip route 10.23.54.0 255.255.255.0 10.23.55.198 5
-ip route 10.23.55.0 255.255.255.128 10.23.55.198 5
-ip route 10.23.52.0 255.255.254.0 10.23.55.198 5
+
+
+
+ip route 10.23.52.0 255.255.252.0 10.23.55.194 
+ip route 10.23.52.0 255.255.252.0 10.23.55.198 5
 ip route 0.0.0.0 0.0.0.0 GigabitEthernet0/0/0
 
 
@@ -696,3 +690,138 @@ interface Vlan50
 
  ip route 0.0.0.0 0.0.0.0 10.23.55.205 10
  ```
+
+
+
+### testes
+
+### G0/1 do router down
+
+VLAN 10
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.55.129
+  2   0 ms      0 ms      0 ms      10.23.55.193
+  3   0 ms      0 ms      0 ms      209.165.200.158
+  4   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+VLAN 20
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.55.129
+  2   0 ms      0 ms      0 ms      10.23.55.193
+  3   0 ms      0 ms      0 ms      209.165.200.158
+  4   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+VLAN 30
+
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.55.1
+  2   0 ms      0 ms      0 ms      10.23.55.2
+  3   0 ms      0 ms      0 ms      10.23.55.193
+  4   0 ms      0 ms      0 ms      209.165.200.158
+  5   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+VLAN 40
+
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   *         0 ms      0 ms      10.23.52.1
+  2   0 ms      0 ms      0 ms      10.23.52.2
+  3   0 ms      0 ms      0 ms      10.23.55.193
+  4   0 ms      0 ms      0 ms      209.165.200.158
+  5   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+#### G0/1 do router shutdown
+
+
+VLAN 10
+
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.55.129
+  2   *         0 ms      0 ms      10.23.55.130
+  3   0 ms      0 ms      0 ms      10.23.55.197
+  4   0 ms      0 ms      0 ms      209.165.200.158
+  5   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+
+VLAN 20
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.54.1
+  2   *         0 ms      0 ms      10.23.54.2
+  3   *         0 ms      0 ms      10.23.55.197
+  4   0 ms      0 ms      0 ms      209.165.200.158
+  5   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+VLAN 30
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.55.1
+  2   0 ms      0 ms      0 ms      10.23.55.197
+  3   0 ms      0 ms      0 ms      209.165.200.158
+  4   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+
+VLAN 40
+
+C:\>tracert 8.8.8.8
+
+Tracing route to 8.8.8.8 over a maximum of 30 hops: 
+
+  1   0 ms      0 ms      0 ms      10.23.52.1
+  2   0 ms      0 ms      0 ms      10.23.55.197
+  3   0 ms      0 ms      0 ms      209.165.200.158
+  4   0 ms      0 ms      0 ms      8.8.8.8
+
+Trace complete.
+
+### TESTE STANDBY VLAN
+
+*** VLAN 10 ShutDown MLS1 ***
+```
+MLS2#show standby brief
+                     P indicates configured to preempt.
+                     |
+Interface   Grp  Pri P State    Active          Standby         Virtual IP
+Vl10        10   100 P Active   local           unknown         10.23.55.190   
+Vl20        20   100 P Standby  10.23.54.1      local           10.23.54.254   
+Vl30        30   150 P Active   local           10.23.55.2      10.23.55.126   
+Vl40        40   150 P Active   local           10.23.52.2      10.23.53.254  
+```
