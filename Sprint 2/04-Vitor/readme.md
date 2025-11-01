@@ -11,38 +11,38 @@ Oporto
 interface Tunnel0
   ip address 10.0.0.1 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 192.0.2.97 255.255.255.240 (! IP Público de Warsaw)
+  tunnel destination 192.0.2.97 (! IP Público de Warsaw)
 
 interface Tunnel1
   ip address 10.0.0.5 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 193.136.60.147 255.255.255.248 (! IP Público de Munich)
+  tunnel destination 193.136.60.147 (! IP Público de Munich)
 
 interface Tunnel2
   ip address 10.0.0.9 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 203.0.113.2 255.255.255.252 (! IP Público do Vault)
+  tunnel destination 203.0.113.2  (! IP Público do Vault)
 ```
 Warsaw
 ```bash
 interface Tunnel0
   ip address 10.0.0.2 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 209.165.200.129 255.255.255.224 (! IP Público de Oporto)
+  tunnel destination 209.165.200.129 (! IP Público de Oporto)
 ```
 Munich
 ```bash
 interface Tunnel1
   ip address 10.0.0.6 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 209.165.200.129 255.255.255.224 (! IP Público de Oporto)
+  tunnel destination 209.165.200.129 (! IP Público de Oporto)
 ```
 Vault
 ```bash
 interface Tunnel2
   ip address 10.0.0.10 255.255.255.252
   tunnel source GigabitEthernet0/0/0
-  tunnel destination 209.165.200.129 255.255.255.224 (! IP Público do Oporto)
+  tunnel destination 209.165.200.129 (! IP Público do Oporto)
 ```
 
 # OSPF
@@ -205,14 +205,49 @@ sure that the interface registers every MAC address that is recognised.
 ### Port Security
 Para as VLANs 10, 20, 30, 40:
 
+**Warsaw branch SW3; SW4; SW5; SW6**
+
 ```bash
-interface range Fa0/1 - 24
-  switchport port-security maximum 2
-  switchport port-security violation shutdown
+!
+interface range Fa0/3 - 5
+  switchport mode access                      
+  switchport access vlan 10                
+  switchport port-security maximum 2        
+  switchport port-security violation shutdown  
   switchport port-security mac-address sticky
   switchport port-security
+!
+!
+interface range Fa0/6 - 10
+  switchport mode access                      
+  switchport access vlan 20                
+  switchport port-security maximum 2        
+  switchport port-security violation shutdown  
+  switchport port-security mac-address sticky
+  switchport port-security
+!
+!
+interface range Fa0/11 - 15
+  switchport mode access                      
+  switchport access vlan 30               
+  switchport port-security maximum 2        
+  switchport port-security violation shutdown  
+  switchport port-security mac-address sticky
+  switchport port-security
+!
+!
+interface range Fa0/16 - 20
+  switchport mode access                      
+  switchport access vlan 40               
+  switchport port-security maximum 2        
+  switchport port-security violation shutdown  
+  switchport port-security mac-address sticky
+  switchport port-security
+!
+end
 
 ```
+
 
 ### REDES
 OPorto - 10.23.52.0/22 
